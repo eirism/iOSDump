@@ -157,8 +157,8 @@ class ios:
                 self.deviceName = info['Device Name']
                 self.lastBackupDate = info['Last Backup Date']
                 self.targetIdentifier = info['Target Identifier']
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
         #self.dumpRestrictionPasscode(index)
 
@@ -182,8 +182,8 @@ class ios:
                 self.restrictionFailedAttempts = info['SBParentalControlsFailedAttempts']
                 #print "Restriction Passcode: " + info['SBParentalControlsPIN']
                 #print "Restriction Passcode: " + info['SBParentalControlsFailedAttempts']
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
 
     # SMS, MMS, iMessages, and iMessage/FaceTime settings
     # HomeDomain
@@ -197,7 +197,7 @@ class ios:
 
         # iOS < v7 - Database Extraction
         try:
-            print "SMS Database: " + self.path() + self.dbSMS
+            print("SMS Database: " + self.path() + self.dbSMS)
             db = sqlite3.connect(self.path() + self.dbSMS)
             cursor = db.cursor()
 
@@ -223,7 +223,7 @@ class ios:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
 
             except Exception as e:
-                print e
+                print(e)
 
             try:
                 # No 'madrid_handle' field in message table
@@ -248,27 +248,27 @@ class ios:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
 
             except Exception as e:
-                print e
+                print(e)
 
             try:
                 # Dump SMS Message Group Data
                 sql = "SELECT * FROM msg_group"
                 cursor.execute(sql)
-                print "msg_group: " + path + "sms_group.json"
+                print("msg_group: " + path + "sms_group.json")
                 with open(path + "sms_group.json", 'w') as outfile:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             try:
                 # Dump SMS Attachment Data
                 sql = "SELECT * FROM msg_pieces"
                 cursor.execute(sql)
-                print "msg_pieces: " + path + "sms_pieces.json"
+                print("msg_pieces: " + path + "sms_pieces.json")
                 with open(path + "sms_pieces.json", 'w') as outfile:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             db.close()
 
@@ -283,22 +283,22 @@ class ios:
                     if row['content_loc'] is not None:
                         # Write each attachment out to the sms folder
                         f = "MediaDomain-Library/SMS/Attachments/" + row['content_loc']
-                        print f
+                        print(f)
                         f = self.path() + hashlib.sha1(f).hexdigest()
-                        print f
+                        print(f)
                         if os.path.exists(f):
                             shutil.copyfile(f, path + "sms/" + row['content_loc'])
 
                 db.close()
             except Exception as e:
-                print e
+                print(e)
 
         except Exception as e:
-            print e
+            print(e)
 
         # iOS >= v6 - Database Extraction
         try:
-            print "SMS Database: " + self.path() + self.dbSMS
+            print("SMS Database: " + self.path() + self.dbSMS)
             db = sqlite3.connect(self.path() + self.dbSMS)
             cursor = db.cursor()
 
@@ -327,21 +327,21 @@ class ios:
                 # Dump SMS Message Group Data
                 sql = "SELECT * FROM chat"
                 cursor.execute(sql)
-                print "chat: " + path + "sms_chat.json"
+                print("chat: " + path + "sms_chat.json")
                 with open(path + "sms_chat.json", 'w') as outfile:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             try:
                 # Dump SMS Attachment Data
                 sql = "SELECT * FROM attachment"
                 cursor.execute(sql)
-                print "attachment: " + path + "sms_attachment.json"
+                print("attachment: " + path + "sms_attachment.json")
                 with open(path + "sms_attachment.json", 'w') as outfile:
                     json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             db.close()
 
@@ -367,17 +367,17 @@ class ios:
 
                 db.close()
             except Exception as e:
-                print e
+                print(e)
 
         except Exception as e:
-            print e
+            print(e)
 
     # Contacts
     # HomeDomain
     # Library/AddressBook/*
     def dumpAddressBook(self, path):
         try:
-            print "Address Book Database: " + self.path() + self.dbAddressBook
+            print("Address Book Database: " + self.path() + self.dbAddressBook)
             dbAB = sqlite3.connect(self.path() + self.dbAddressBook)
             cursorAB = dbAB.cursor()
 
@@ -411,7 +411,7 @@ class ios:
                 with open(path + "contact_address.json", 'w') as outfile:
                     json.dump(cursorAB.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             try:
                 sql = "SELECT * FROM ABMultiValue" # WHERE record_id = 1 Order By label"
@@ -419,11 +419,11 @@ class ios:
                 with open(path + "contact_phone_email.json", 'w') as outfile:
                     json.dump(cursorAB.fetchall(), outfile, default=base64.b64encode)
             except Exception as e:
-                print e
+                print(e)
 
             dbAB.close()
         except Exception as e:
-            print e
+            print(e)
 
         # Dump Address Book Images
         try:
@@ -435,21 +435,21 @@ class ios:
             cursorABI.execute(sql)
             for row in cursorABI:
                 # Write each image out to the contacts folder
-                print path + "contacts/%s.jpg" % row['record_id']
+                print(path + "contacts/%s.jpg" % row['record_id'])
                 f = open(path + "contacts/" + str(row['record_id']) + ".jpg", "w")
                 f.write(row['data'])
                 f.close()
 
             dbABI.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Call History
     # WirelessDomain
     # Library/CallHistory/*
     def dumpCallHistory(self, filename):
         try:
-            print "Call History Database: " + self.path() + self.dbCallHistory
+            print("Call History Database: " + self.path() + self.dbCallHistory)
             db = sqlite3.connect(self.path() + self.dbCallHistory)
             cursor = db.cursor()
 
@@ -469,7 +469,7 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Calendar
     # HomeDomain
@@ -477,7 +477,7 @@ class ios:
     # Library/Preferences/com.apple.mobilecal*
     def dumpCalendar(self, filename):
         try:
-            print "Calendar Database: " + self.path() + self.dbCalendar
+            print("Calendar Database: " + self.path() + self.dbCalendar)
             db = sqlite3.connect(self.path() + self.dbCalendar)
             cursor = db.cursor()
 
@@ -498,7 +498,7 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Camera Roll - When replacing, you should delete all files in the respected folders first
     # CameraRollDomain
@@ -515,7 +515,7 @@ class ios:
     # Media/PhotoData/Metadata/PhotoData/Sync/[number >= 100]SYNCD/IMG_[number of video in Camera Roll].THM - Corresponds to its parallel in Media/PhotoData/Metadata/DCIM/[number >= 100]APPLE/IMG_number of video in Camera Roll].THM
     def dumpCameraRoll(self, path, filename):
         try:
-            print "Photo Database: " + self.path() + self.dbPhotos
+            print("Photo Database: " + self.path() + self.dbPhotos)
             db = sqlite3.connect(self.path() + self.dbPhotos)
             cursor = db.cursor()
 
@@ -547,7 +547,7 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
         try:
             db = sqlite3.connect(self.path() + self.dbPhotos)
@@ -559,7 +559,7 @@ class ios:
                 f = "CameraRollDomain-Media/" + row['directory'] + "/" + row['filename']
                 f = self.path() + hashlib.sha1(f).hexdigest()
                 if os.path.exists(f):
-                    print f
+                    print(f)
                     shutil.copyfile(f, path + "roll/" + row['filename'])
 
                 # Copy video thumbnails to roll folder
@@ -567,25 +567,25 @@ class ios:
                     f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".THM"
                     f = self.path() + hashlib.sha1(f).hexdigest()
                     if os.path.exists(f):
-                        print f
+                        print(f)
                         shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
                     else:
                         f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".JPG"
                         f = self.path() + hashlib.sha1(f).hexdigest()
                         if os.path.exists(f):
-                            print f
+                            print(f)
                             shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Voicemail
     # HomeDomain
     # Library/Voicemail/*
     def dumpVoicemail(self, path, filename):
         try:
-            print "Voicemail Database: " + self.path() + self.dbVoicemail
+            print("Voicemail Database: " + self.path() + self.dbVoicemail)
             db = sqlite3.connect(self.path() + self.dbVoicemail)
             cursor = db.cursor()
 
@@ -606,7 +606,7 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
         try:
             db = sqlite3.connect(self.path() + self.dbVoicemail)
@@ -617,13 +617,13 @@ class ios:
                 # Write each image out to the contacts folder
                 vm = "HomeDomain-Library/Voicemail/" + str(row['id']) + ".amr"
                 vm = self.path() + hashlib.sha1(vm).hexdigest()
-                print vm
+                print(vm)
                 if os.path.exists(vm):
                     shutil.copyfile(vm, path + "vm/" + str(row['id']) + ".amr")
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Voice Memos
     # MediaDomain
@@ -631,7 +631,7 @@ class ios:
     # Media/Recordings/[date] [time].m4a - Voice Memo, named YYYYMMDD HHMMSS.m4a
     def dumpMemos(self, path, filename):
         try:
-            print "Voice Memo Database: " + self.path() + self.dbRecordings
+            print("Voice Memo Database: " + self.path() + self.dbRecordings)
             db = sqlite3.connect(self.path() + self.dbRecordings)
             cursor = db.cursor()
 
@@ -650,7 +650,7 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
         try:
             db = sqlite3.connect(self.path() + self.dbRecordings)
@@ -662,13 +662,13 @@ class ios:
                 vm = row['path']
                 vm = vm.replace("/var/mobile/", "MediaDomain-")
                 vm = self.path() + hashlib.sha1(vm).hexdigest()
-                print vm
+                print(vm)
                 if os.path.exists(vm):
                     shutil.copyfile(vm, path + "rec/" + str(row['id']) + ".m4a")
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
 
     # Notes
     # HomeDomain
@@ -676,7 +676,7 @@ class ios:
     # Library/Preferences/com.apple.mobilenotes.plist
     def dumpNotes(self, filename):
         try:
-            print "Notes Database: " + self.path() + self.dbNotes
+            print("Notes Database: " + self.path() + self.dbNotes)
             db = sqlite3.connect(self.path() + self.dbNotes)
             cursor = db.cursor()
 
@@ -697,4 +697,4 @@ class ios:
 
             db.close()
         except Exception as e:
-            print e
+            print(e)
