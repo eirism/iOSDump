@@ -26,7 +26,7 @@ import tempfile
 from biplist import *
 
 # Setup Global Vars
-path = expanduser("~") + "/Library/Application Support/MobileSync/Backup/"
+default_backup_path = expanduser("~") + "/Library/Application Support/MobileSync/Backup/"
 
 # iOS Specific Filenames and hashes
 
@@ -149,9 +149,11 @@ class ios:
     dbPhotos = hashlib.sha1(dbPhotos.encode()).hexdigest()
     dbRecordings = hashlib.sha1(dbRecordings.encode()).hexdigest()
 
-    def __init__(self):
+    def __init__(self, path=default_backup_path):
+        """ The given path should only contain iOS backups """
         self.index = 0
-        self.backups = os.listdir(path)
+        self.backup_path = path
+        self.backups = os.listdir(self.backup_path)
 
     def select(self, index):
         self.index = index
