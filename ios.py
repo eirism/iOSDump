@@ -155,7 +155,7 @@ class ios:
 
     def select(self, index):
         self.index = index
-        plistInfo = path + self.backups[index] + "/Info.plist"
+        plistInfo = self.path(index) + "Info.plist"
         if os.path.exists(plistInfo):
             try:
                 info = readPlist(plistInfo)
@@ -176,15 +176,15 @@ class ios:
     # Return Backup Path
     def path(self, index=-1):
         if index == -1:
-            backup = path + self.backups[self.index] + "/"
+            backup = self.backup_path + self.backups[self.index] + "/"
         else:
-            backup = path + self.backups[index] + "/"
+            backup = self.backup_path + self.backups[index] + "/"
 
         return backup
 
     # Dump Restriction Passcode
     def dumpRestrictionPasscode(self, index):
-        plistRestrictions = path + self.backups[index] + "/" + self.plistRestrictions
+        plistRestrictions = self.path(index) + self.plistRestrictions
         #print "Restriction Passcode: " + plistRestrictions
         if os.path.exists(plistRestrictions):
             try:
