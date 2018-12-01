@@ -28,20 +28,31 @@ from biplist import *
 # Setup Global Vars
 path = expanduser("~") + "/Library/Application Support/MobileSync/Backup/"
 
-# iOS Specific Filenames
-plistKeyChain = 'KeychainDomain-keychain-backup.plist'								# 51a4616e576dd33cd2abadfea874eb8ff246bf0e
+# iOS Specific Filenames and hashes
+
+# 51a4616e576dd33cd2abadfea874eb8ff246bf0e
+plistKeyChain = 'KeychainDomain-keychain-backup.plist'
 plistHistory = 'HomeDomain-Library/Safari/History.plist'
 plistRestrictions = 'HomeDomain-Library/Preferences/com.apple.springboard.plist'
 
-dbSMS = 'HomeDomain-Library/SMS/sms.db'												# 3d0d7e5fb2ce288813306e4d4636395e047a3d28
-dbAddressBook = 'HomeDomain-Library/AddressBook/AddressBook.sqlitedb'				# 31bb7ba8914766d4ba40d6dfb6113c8b614be442
-dbAddressBookImages = 'HomeDomain-Library/AddressBook/AddressBookImages.sqlitedb' 	# cd6702cea29fe89cf280a76794405adb17f9a0ee
-dbCallHistory = 'WirelessDomain-Library/CallHistory/call_history.db'				# 2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca
-dbNotes = 'HomeDomain-Library/Notes/notes.sqlite'									# ca3bc056d4da0bbf88b5fb3be254f3b7147e639c
-dbCalendar = 'HomeDomain-Library/Calendar/Calendar.sqlitedb'						# 2041457d5fe04d39d0ab481178355df6781e6858
-dbVoicemail = 'HomeDomain-Library/Voicemail/voicemail.db'							# 992df473bbb9e132f4b3b6e4d33f72171e97bc7a
-dbPhotos = 'CameraRollDomain-Media/PhotoData/Photos.sqlite'							# 12b144c0bd44f2b3dffd9186d3f9c05b917cee25
-dbRecordings = 'MediaDomain-Media/Recordings/Recordings.db'							# 303e04f2a5b473c5ca2127d65365db4c3e055c05
+# 3d0d7e5fb2ce288813306e4d4636395e047a3d28
+dbSMS = 'HomeDomain-Library/SMS/sms.db'
+# 31bb7ba8914766d4ba40d6dfb6113c8b614be442
+dbAddressBook = 'HomeDomain-Library/AddressBook/AddressBook.sqlitedb'
+# cd6702cea29fe89cf280a76794405adb17f9a0ee
+dbAddressBookImages = 'HomeDomain-Library/AddressBook/AddressBookImages.sqlitedb'
+# 2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca
+dbCallHistory = 'WirelessDomain-Library/CallHistory/call_history.db'
+# ca3bc056d4da0bbf88b5fb3be254f3b7147e639c
+dbNotes = 'HomeDomain-Library/Notes/notes.sqlite'
+# 2041457d5fe04d39d0ab481178355df6781e6858
+dbCalendar = 'HomeDomain-Library/Calendar/Calendar.sqlitedb'
+# 992df473bbb9e132f4b3b6e4d33f72171e97bc7a
+dbVoicemail = 'HomeDomain-Library/Voicemail/voicemail.db'
+# 12b144c0bd44f2b3dffd9186d3f9c05b917cee25
+dbPhotos = 'CameraRollDomain-Media/PhotoData/Photos.sqlite'
+# 303e04f2a5b473c5ca2127d65365db4c3e055c05
+dbRecordings = 'MediaDomain-Media/Recordings/Recordings.db'
 dbBookmarks = 'HomeDomain-Library/Safari/Bookmarks.db'
 dbLocations = ''
 
@@ -124,19 +135,19 @@ class ios:
     targetIdentifier = ''
 
     # Hash iOS Filenames
-    plistKeyChain = hashlib.sha1(plistKeyChain).hexdigest()
-    plistHistory = hashlib.sha1(plistHistory).hexdigest()
-    plistRestrictions = hashlib.sha1(plistRestrictions).hexdigest()
+    plistKeyChain = hashlib.sha1(plistKeyChain.encode()).hexdigest()
+    plistHistory = hashlib.sha1(plistHistory.encode()).hexdigest()
+    plistRestrictions = hashlib.sha1(plistRestrictions.encode()).hexdigest()
 
-    dbSMS = hashlib.sha1(dbSMS).hexdigest()
-    dbAddressBook = hashlib.sha1(dbAddressBook).hexdigest()
-    dbAddressBookImages = hashlib.sha1(dbAddressBookImages).hexdigest()
-    dbCallHistory = hashlib.sha1(dbCallHistory).hexdigest()
-    dbNotes = hashlib.sha1(dbNotes).hexdigest()
-    dbCalendar = hashlib.sha1(dbCalendar).hexdigest()
-    dbVoicemail = hashlib.sha1(dbVoicemail).hexdigest()
-    dbPhotos = hashlib.sha1(dbPhotos).hexdigest()
-    dbRecordings = hashlib.sha1(dbRecordings).hexdigest()
+    dbSMS = hashlib.sha1(dbSMS.encode()).hexdigest()
+    dbAddressBook = hashlib.sha1(dbAddressBook.encode()).hexdigest()
+    dbAddressBookImages = hashlib.sha1(dbAddressBookImages.encode()).hexdigest()
+    dbCallHistory = hashlib.sha1(dbCallHistory.encode()).hexdigest()
+    dbNotes = hashlib.sha1(dbNotes.encode()).hexdigest()
+    dbCalendar = hashlib.sha1(dbCalendar.encode()).hexdigest()
+    dbVoicemail = hashlib.sha1(dbVoicemail.encode()).hexdigest()
+    dbPhotos = hashlib.sha1(dbPhotos.encode()).hexdigest()
+    dbRecordings = hashlib.sha1(dbRecordings.encode()).hexdigest()
 
     def __init__(self):
         self.index = 0
