@@ -22,7 +22,6 @@ import base64
 import hashlib
 import json
 import sqlite3
-import tempfile
 from biplist import *
 
 # Setup Global Vars

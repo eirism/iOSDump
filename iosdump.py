@@ -1,16 +1,10 @@
 #!/usr/bin/python
 
-import sys
 import shutil
 import os
 import os.path
 from os.path import expanduser
 
-import glob
-import json
-import sqlite3
-import tempfile
-import datetime
 from ios import ios
 
 # Global Variables
