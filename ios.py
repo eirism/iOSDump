@@ -25,7 +25,7 @@ import base64
 import hashlib
 import json
 import sqlite3
-from biplist import *
+from biplist import readPlist
 
 # Setup Global Vars
 default_backup_path = expanduser("~") + "/Library/Application Support/MobileSync/Backup/"
