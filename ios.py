@@ -1,16 +1,19 @@
 #!/usr/bin/python
 
-# http://www.imactools.com/iphonebackupviewer/
-# http://www.securitylearn.net/2012/05/05/iphone-backup-mbdb-file-structure/
-# http://www.securitylearn.net/tag/iphone-backups-decrypting-the-keychain/
-# https://theiphonewiki.com/wiki/ITunes_Backup
-# http://www.mobile60s.com/iphone/jailbreaks-and-ios-hacks/list-of-files-and-their-roles-in-itunes-backups-and-how-to-use-them-54158.html
-# http://codepen.io/samuelkraft/pen/Farhl
-# http://stackoverflow.com/questions/3085153/how-to-parse-the-manifest-mbdb-file-in-an-ios-4-0-itunes-backup
-# http://linuxsleuthing.blogspot.com/2012/10/whos-texting-ios6-smsdb.html
-# http://www.securitylearn.net/2012/10/27/cookies-binarycookies-reader/
-# http://www.slideshare.net/ohprecio/iphone-forensics-without-iphone-using-itunes-backup
-# https://en.wikipedia.org/wiki/List_of_iOS_devices
+"""
+Sources on backup format:
+http://www.imactools.com/iphonebackupviewer/
+http://www.securitylearn.net/2012/05/05/iphone-backup-mbdb-file-structure/
+http://www.securitylearn.net/tag/iphone-backups-decrypting-the-keychain/
+https://theiphonewiki.com/wiki/ITunes_Backup
+http://www.mobile60s.com/iphone/jailbreaks-and-ios-hacks/list-of-files-and-their-roles-in-itunes-backups-and-how-to-use-them-54158.html
+http://codepen.io/samuelkraft/pen/Farhl
+http://stackoverflow.com/questions/3085153/how-to-parse-the-manifest-mbdb-file-in-an-ios-4-0-itunes-backup
+http://linuxsleuthing.blogspot.com/2012/10/whos-texting-ios6-smsdb.html
+http://www.securitylearn.net/2012/10/27/cookies-binarycookies-reader/
+http://www.slideshare.net/ohprecio/iphone-forensics-without-iphone-using-itunes-backup
+https://en.wikipedia.org/wiki/List_of_iOS_devices
+"""  # noqa
 
 import shutil
 import os
