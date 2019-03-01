@@ -163,7 +163,7 @@ class ios:
         if os.path.exists(plistInfo):
             try:
                 info = readPlist(plistInfo)
-                m = re.match("(.*?)\d", info['Product Type'])
+                m = re.match(r"(.*?)\d", info['Product Type'])
                 self.deviceType = m.group(1)
                 self.deviceModel = self.devices[info['Product Type']]
                 self.productType = info['Product Type'].replace(',', '').lower()
