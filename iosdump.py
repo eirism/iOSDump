@@ -105,7 +105,6 @@ def iosDumpData(selection):
 
     print("Dump Complete!")
 
-    os.system("open " + outputFolder)
 
 
 iosBackup = ios()
