@@ -21,9 +21,7 @@ import os.path
 from os.path import expanduser
 
 import re
-import base64
 import hashlib
-import json
 import sqlite3
 from biplist import readPlist
 
@@ -208,182 +206,49 @@ class ios:
     # Library/SMS/*
     # Library/SMS/Attachments/[random string associated with an MMS]/[MMS file name].[extension] - An MMS file
     # Library/SMS/Attachments/[random string associated with an MMS]/[MMS file name]-preview-left.jpg - A preview/thumbnail of an MMS file
-    def dumpSMS(self, path, filename):
-
-        # iOS < v7 - Database Extraction
+    def dumpSMS(self, path):
         try:
-            print("SMS Database: " + self.path() + self.dbSMS)
+            # Save all SMS Attachments iOS < 6.0
+            sql = "SELECT * FROM msg_pieces"
             db = sqlite3.connect(self.path() + self.dbSMS)
+            db.row_factory = sqlite3.Row
             cursor = db.cursor()
-
-            try:
-                sql = '''SELECT message.ROWID,
-                            message.flags,
-                            ifnull(message.address,'') || ifnull(madrid_handle,'') as address,
-                            message.subject,
-                            message.text,
-                            message.group_id,
-                            message.recipients,
-                            message.read,
-                            message.association_id,
-                            message.UIFlags,
-                            datetime(message.date+978307200, 'unixepoch', 'localtime') as 'date'
-                        FROM message
-                        WHERE message.text is not NULL
-                        ORDER BY message.date'''
-
-                cursor.execute(sql)
-
-                with open(path + filename, 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            except Exception as e:
-                print(e)
-
-            try:
-                # No 'madrid_handle' field in message table
-                sql = '''SELECT message.ROWID,
-                            message.flags,
-                            message.address as address,
-                            message.subject,
-                            message.text,
-                            message.group_id,
-                            message.recipients,
-                            message.read,
-                            message.association_id,
-                            message.UIFlags,
-                            datetime(message.date+978307200, 'unixepoch', 'localtime') as 'date'
-                        FROM message
-                        WHERE message.text is not NULL
-                        ORDER BY message.date'''
-
-                cursor.execute(sql)
-
-                with open(path + filename, 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            except Exception as e:
-                print(e)
-
-            try:
-                # Dump SMS Message Group Data
-                sql = "SELECT * FROM msg_group"
-                cursor.execute(sql)
-                print("msg_group: " + path + "sms_group.json")
-                with open(path + "sms_group.json", 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
-
-            try:
-                # Dump SMS Attachment Data
-                sql = "SELECT * FROM msg_pieces"
-                cursor.execute(sql)
-                print("msg_pieces: " + path + "sms_pieces.json")
-                with open(path + "sms_pieces.json", 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
+            cursor.execute(sql)
+            for row in cursor:
+                if row['content_loc'] is not None:
+                    # Write each attachment out to the sms folder
+                    f = "MediaDomain-Library/SMS/Attachments/" + row['content_loc']
+                    print(f)
+                    f = self.path() + hashlib.sha1(f).hexdigest()
+                    print(f)
+                    if os.path.exists(f):
+                        shutil.copyfile(f, path + "sms/" + row['content_loc'])
 
             db.close()
-
-            try:
-                # Save all SMS Attachments iOS < 6.0
-                sql = "SELECT * FROM msg_pieces"
-                db = sqlite3.connect(self.path() + self.dbSMS)
-                db.row_factory = sqlite3.Row
-                cursor = db.cursor()
-                cursor.execute(sql)
-                for row in cursor:
-                    if row['content_loc'] is not None:
-                        # Write each attachment out to the sms folder
-                        f = "MediaDomain-Library/SMS/Attachments/" + row['content_loc']
-                        print(f)
-                        f = self.path() + hashlib.sha1(f).hexdigest()
-                        print(f)
-                        if os.path.exists(f):
-                            shutil.copyfile(f, path + "sms/" + row['content_loc'])
-
-                db.close()
-            except Exception as e:
-                print(e)
-
         except Exception as e:
             print(e)
 
-        # iOS >= v6 - Database Extraction
         try:
-            print("SMS Database: " + self.path() + self.dbSMS)
+            # Save all SMS Attachments iOS >= 6.0
+            sql = "SELECT * FROM attachment"
             db = sqlite3.connect(self.path() + self.dbSMS)
+            db.row_factory = sqlite3.Row
             cursor = db.cursor()
-
-            sql = '''SELECT chat_message_join.chat_id as id,
-                        handle.id as contact_id,
-                        message.is_from_me,
-                        message.text,
-                        chat.state,
-                        message.is_read,
-                        message.is_sent,
-                        datetime(message.date+978307200, 'unixepoch', 'localtime') as 'date',
-                        datetime(message.date_read+978307200, 'unixepoch', 'localtime') as 'date_read',
-                        datetime(message.date_delivered+978307200, 'unixepoch', 'localtime') as 'date_delivered'
-                    FROM chat INNER JOIN chat_message_join ON chat.ROWID = chat_message_join.chat_id
-                         INNER JOIN message ON chat_message_join.message_id = message.ROWID
-                         INNER JOIN chat_handle_join ON chat.ROWID = chat_handle_join.chat_id AND chat_handle_join.handle_id = handle.ROWID,
-                        handle
-                    ORDER BY chat_message_join.chat_id, message.date'''
-
             cursor.execute(sql)
-
-            with open(path + filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            try:
-                # Dump SMS Message Group Data
-                sql = "SELECT * FROM chat"
-                cursor.execute(sql)
-                print("chat: " + path + "sms_chat.json")
-                with open(path + "sms_chat.json", 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
-
-            try:
-                # Dump SMS Attachment Data
-                sql = "SELECT * FROM attachment"
-                cursor.execute(sql)
-                print("attachment: " + path + "sms_attachment.json")
-                with open(path + "sms_attachment.json", 'w') as outfile:
-                    json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
+            for row in cursor:
+                if row['filename'] is not None:
+                    # Write each attachment out to the sms folder
+                    f = row['filename']
+                    f = f.replace("/var/mobile/", "MediaDomain-")
+                    f = f.replace("~/", "MediaDomain-")
+                    #print f
+                    f = self.path() + hashlib.sha1(f).hexdigest()
+                    #print f
+                    if os.path.exists(f):
+                        head, tail = os.path.split(row['filename'])
+                        shutil.copyfile(f, path + "sms/" + tail)
 
             db.close()
-
-            try:
-                # Save all SMS Attachments
-                sql = "SELECT * FROM attachment"
-                db = sqlite3.connect(self.path() + self.dbSMS)
-                db.row_factory = sqlite3.Row
-                cursor = db.cursor()
-                cursor.execute(sql)
-                for row in cursor:
-                    if row['filename'] is not None:
-                        # Write each attachment out to the sms folder
-                        f = row['filename']
-                        f = f.replace("/var/mobile/", "MediaDomain-")
-                        f = f.replace("~/", "MediaDomain-")
-                        #print f
-                        f = self.path() + hashlib.sha1(f).hexdigest()
-                        #print f
-                        if os.path.exists(f):
-                            head, tail = os.path.split(row['filename'])
-                            shutil.copyfile(f, path + "sms/" + tail)
-
-                db.close()
-            except Exception as e:
-                print(e)
-
         except Exception as e:
             print(e)
 
@@ -391,55 +256,6 @@ class ios:
     # HomeDomain
     # Library/AddressBook/*
     def dumpAddressBook(self, path):
-        try:
-            print("Address Book Database: " + self.path() + self.dbAddressBook)
-            dbAB = sqlite3.connect(self.path() + self.dbAddressBook)
-            cursorAB = dbAB.cursor()
-
-            sql = '''SELECT ABPerson.ROWID as id,
-                                ABPerson.DisplayName,
-                                ABPerson.First,
-                                ABPerson.Middle,
-                                ABPerson.Last,
-                                ABPerson.Nickname,
-                                ABPerson.Organization,
-                                ABPerson.Department,
-                                ABPerson.JobTitle,
-                                ABPerson.Note,
-                                ABPerson.Birthday,
-                                ABPersonFullTextSearch_content.c15Phone,
-                                ABPersonFullTextSearch_content.c16Email,
-                                ABPersonFullTextSearch_content.c18SocialProfile,
-                                ABPersonFullTextSearch_content.c19URL,
-                                datetime(ABPerson.CreationDate+978307200, 'unixepoch', 'localtime') AS creation_date,
-                                datetime(ABPerson.ModificationDate+978307200, 'unixepoch', 'localtime') AS modified_date
-                            FROM ABPerson INNER JOIN ABPersonFullTextSearch_content ON ABPerson.ROWID = ABPersonFullTextSearch_content.docid
-                            ORDER BY ABPerson.ROWID'''
-
-            cursorAB.execute(sql)
-            with open(path + "contacts.json", 'w') as outfile:
-                json.dump(cursorAB.fetchall(), outfile, default=base64.b64encode)
-
-            try:
-                sql = "SELECT * FROM ABMultiValueEntry" # WHERE parent_id = 1 Order By 'key'"
-                cursorAB.execute(sql)
-                with open(path + "contact_address.json", 'w') as outfile:
-                    json.dump(cursorAB.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
-
-            try:
-                sql = "SELECT * FROM ABMultiValue" # WHERE record_id = 1 Order By label"
-                cursorAB.execute(sql)
-                with open(path + "contact_phone_email.json", 'w') as outfile:
-                    json.dump(cursorAB.fetchall(), outfile, default=base64.b64encode)
-            except Exception as e:
-                print(e)
-
-            dbAB.close()
-        except Exception as e:
-            print(e)
-
         # Dump Address Book Images
         try:
             dbABI = sqlite3.connect(self.path() + self.dbAddressBookImages)
@@ -459,62 +275,6 @@ class ios:
         except Exception as e:
             print(e)
 
-    # Call History
-    # WirelessDomain
-    # Library/CallHistory/*
-    def dumpCallHistory(self, filename):
-        try:
-            print("Call History Database: " + self.path() + self.dbCallHistory)
-            db = sqlite3.connect(self.path() + self.dbCallHistory)
-            cursor = db.cursor()
-
-            sql = '''SELECT  call.ROWID as id,
-                        call.id as contact_id,
-                        call.address,
-                        call.duration,
-                        call.flags,
-                        datetime(call.date+978307200, 'unixepoch', 'localtime') as 'date'
-                    FROM call
-                    ORDER BY call.date'''
-
-            cursor.execute(sql)
-
-            with open(filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            db.close()
-        except Exception as e:
-            print(e)
-
-    # Calendar
-    # HomeDomain
-    # Library/Calendar/* <-The asterisk (*) means all files inside that folder
-    # Library/Preferences/com.apple.mobilecal*
-    def dumpCalendar(self, filename):
-        try:
-            print("Calendar Database: " + self.path() + self.dbCalendar)
-            db = sqlite3.connect(self.path() + self.dbCalendar)
-            cursor = db.cursor()
-
-            sql = '''SELECT ZNOTE.ZBODY as id,
-                        ZNOTE.ZTITLE as title,
-                        ZNOTE.ZSUMMARY as summary,
-                        ZNOTEBODY.ZCONTENT as content,
-                        ZNOTE.ZDELETEDFLAG as deleted,
-                        datetime(ZNOTE.ZCREATIONDATE+978307200, 'unixepoch', 'localtime') as 'creation_date',
-                        datetime(ZNOTE.ZMODIFICATIONDATE+978307200, 'unixepoch', 'localtime') as 'modified_date'
-                    FROM ZNOTE INNER JOIN ZNOTEBODY ON ZNOTE.Z_PK = ZNOTEBODY.ZOWNER
-                    ORDER BY ZNOTE.ZCREATIONDATE'''
-
-            cursor.execute(sql)
-
-            with open(filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            db.close()
-        except Exception as e:
-            print(e)
-
     # Camera Roll - When replacing, you should delete all files in the respected folders first
     # CameraRollDomain
     # Media/DCIM/*
@@ -528,41 +288,27 @@ class ios:
     # Media/PhotoData/Metadata/DCIM/[number >= 100]APPLE/IMG_[number of video in Camera Roll].THM - Thumbnail of a video in the Camera Roll
     # Media/PhotoData/Metadata/PhotoData/Sync/[number >= 100]SYNCD/IMG_[number of video in Camera Roll].JPG - Corresponds to its parallel in Media/PhotoData/Metadata/DCIM/[number >= 100]APPLE/IMG_number of video in Camera Roll].JPG
     # Media/PhotoData/Metadata/PhotoData/Sync/[number >= 100]SYNCD/IMG_[number of video in Camera Roll].THM - Corresponds to its parallel in Media/PhotoData/Metadata/DCIM/[number >= 100]APPLE/IMG_number of video in Camera Roll].THM
-    def dumpCameraRoll(self, path, filename):
-        try:
-            print("Photo Database: " + self.path() + self.dbPhotos)
-            db = sqlite3.connect(self.path() + self.dbPhotos)
-            cursor = db.cursor()
-
-            sql = '''SELECT ZGENERICASSET.Z_PK AS id,
-                        ZGENERICASSET.ZKIND AS kind,
-                        ZGENERICASSET.ZWIDTH AS width,
-                        ZGENERICASSET.ZHEIGHT AS height,
-                        ZGENERICASSET.ZORIENTATION AS orientation,
-                        ZADDITIONALASSETATTRIBUTES.ZDURATION as duration,
-                        ZADDITIONALASSETATTRIBUTES.ZORIGINALFILESIZE as filesize,
-                        ZGENERICASSET.ZDIRECTORY AS directory,
-                        ZGENERICASSET.ZFILENAME AS filename,
-                        ZGENERICASSET.ZUNIFORMTYPEIDENTIFIER AS type,
-                        ZGENERICASSET.ZTHUMBNAILINDEX AS thumbnail_index,
-                        ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILWIDTH,
-                        ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILHEIGHT,
-                        ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILLENGTH,
-                        ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILOFFSET,
-                        datetime(ZGENERICASSET.ZDATECREATED+978307200, 'unixepoch', 'localtime') AS creation_date,
-                        datetime(ZGENERICASSET.ZMODIFICATIONDATE+978307200, 'unixepoch', 'localtime') AS modified_date
-                    FROM ZGENERICASSET INNER JOIN ZADDITIONALASSETATTRIBUTES ON ZGENERICASSET.ZADDITIONALATTRIBUTES = ZADDITIONALASSETATTRIBUTES.Z_PK
-                    WHERE ZGENERICASSET.ZDATECREATED is not NULL
-                    ORDER BY ZGENERICASSET.ZDATECREATED ASC'''
-
-            cursor.execute(sql)
-
-            with open(path + filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            db.close()
-        except Exception as e:
-            print(e)
+    def dumpCameraRoll(self, path):
+        sql = '''SELECT ZGENERICASSET.Z_PK AS id,
+                    ZGENERICASSET.ZKIND AS kind,
+                    ZGENERICASSET.ZWIDTH AS width,
+                    ZGENERICASSET.ZHEIGHT AS height,
+                    ZGENERICASSET.ZORIENTATION AS orientation,
+                    ZADDITIONALASSETATTRIBUTES.ZDURATION as duration,
+                    ZADDITIONALASSETATTRIBUTES.ZORIGINALFILESIZE as filesize,
+                    ZGENERICASSET.ZDIRECTORY AS directory,
+                    ZGENERICASSET.ZFILENAME AS filename,
+                    ZGENERICASSET.ZUNIFORMTYPEIDENTIFIER AS type,
+                    ZGENERICASSET.ZTHUMBNAILINDEX AS thumbnail_index,
+                    ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILWIDTH,
+                    ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILHEIGHT,
+                    ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILLENGTH,
+                    ZADDITIONALASSETATTRIBUTES.ZEMBEDDEDTHUMBNAILOFFSET,
+                    datetime(ZGENERICASSET.ZDATECREATED+978307200, 'unixepoch', 'localtime') AS creation_date,
+                    datetime(ZGENERICASSET.ZMODIFICATIONDATE+978307200, 'unixepoch', 'localtime') AS modified_date
+                FROM ZGENERICASSET INNER JOIN ZADDITIONALASSETATTRIBUTES ON ZGENERICASSET.ZADDITIONALATTRIBUTES = ZADDITIONALASSETATTRIBUTES.Z_PK
+                WHERE ZGENERICASSET.ZDATECREATED is not NULL
+                ORDER BY ZGENERICASSET.ZDATECREATED ASC'''
 
         try:
             db = sqlite3.connect(self.path() + self.dbPhotos)
@@ -598,30 +344,16 @@ class ios:
     # Voicemail
     # HomeDomain
     # Library/Voicemail/*
-    def dumpVoicemail(self, path, filename):
-        try:
-            print("Voicemail Database: " + self.path() + self.dbVoicemail)
-            db = sqlite3.connect(self.path() + self.dbVoicemail)
-            cursor = db.cursor()
-
-            sql = '''SELECT voicemail.ROWID as id,
-                        voicemail.remote_uid,
-                        voicemail.sender,
-                        voicemail.duration,
-                        voicemail.flags,
-                        datetime(voicemail.date+978307200, 'unixepoch', 'localtime') as 'date',
-                        datetime(voicemail.trashed_date+978307200, 'unixepoch', 'localtime') as 'trashed_date'
-                    FROM voicemail
-                    ORDER BY voicemail.date'''
-
-            cursor.execute(sql)
-
-            with open(path + filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            db.close()
-        except Exception as e:
-            print(e)
+    def dumpVoicemail(self, path):
+        sql = '''SELECT voicemail.ROWID as id,
+                    voicemail.remote_uid,
+                    voicemail.sender,
+                    voicemail.duration,
+                    voicemail.flags,
+                    datetime(voicemail.date+978307200, 'unixepoch', 'localtime') as 'date',
+                    datetime(voicemail.trashed_date+978307200, 'unixepoch', 'localtime') as 'trashed_date'
+                FROM voicemail
+                ORDER BY voicemail.date'''
 
         try:
             db = sqlite3.connect(self.path() + self.dbVoicemail)
@@ -644,28 +376,14 @@ class ios:
     # MediaDomain
     # Media/Recordings/*
     # Media/Recordings/[date] [time].m4a - Voice Memo, named YYYYMMDD HHMMSS.m4a
-    def dumpMemos(self, path, filename):
-        try:
-            print("Voice Memo Database: " + self.path() + self.dbRecordings)
-            db = sqlite3.connect(self.path() + self.dbRecordings)
-            cursor = db.cursor()
-
-            sql = '''SELECT ZRECORDING.Z_PK as id,
-                        ZRECORDING.ZCUSTOMLABEL as label,
-                        ZRECORDING.ZDURATION as duration,
-                        ZRECORDING.ZPATH as path,
-                        datetime(ZRECORDING.ZDATE+978307200, 'unixepoch', 'localtime') as 'date'
-                    FROM ZRECORDING
-                    ORDER BY ZDATE'''
-
-            cursor.execute(sql)
-
-            with open(path + filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
-
-            db.close()
-        except Exception as e:
-            print(e)
+    def dumpMemos(self, path):
+        sql = '''SELECT ZRECORDING.Z_PK as id,
+                    ZRECORDING.ZCUSTOMLABEL as label,
+                    ZRECORDING.ZDURATION as duration,
+                    ZRECORDING.ZPATH as path,
+                    datetime(ZRECORDING.ZDATE+978307200, 'unixepoch', 'localtime') as 'date'
+                FROM ZRECORDING
+                ORDER BY ZDATE'''
 
         try:
             db = sqlite3.connect(self.path() + self.dbRecordings)
@@ -680,35 +398,6 @@ class ios:
                 print(vm)
                 if os.path.exists(vm):
                     shutil.copyfile(vm, path + "rec/" + str(row['id']) + ".m4a")
-
-            db.close()
-        except Exception as e:
-            print(e)
-
-    # Notes
-    # HomeDomain
-    # Library/Notes/*
-    # Library/Preferences/com.apple.mobilenotes.plist
-    def dumpNotes(self, filename):
-        try:
-            print("Notes Database: " + self.path() + self.dbNotes)
-            db = sqlite3.connect(self.path() + self.dbNotes)
-            cursor = db.cursor()
-
-            sql = '''SELECT ZNOTE.ZBODY as id,
-                        ZNOTE.ZTITLE as title,
-                        ZNOTE.ZSUMMARY as summary,
-                        ZNOTEBODY.ZCONTENT as content,
-                        ZNOTE.ZDELETEDFLAG as deleted,
-                        datetime(ZNOTE.ZCREATIONDATE+978307200, 'unixepoch', 'localtime') as 'creation_date',
-                        datetime(ZNOTE.ZMODIFICATIONDATE+978307200, 'unixepoch', 'localtime') as 'modified_date'
-                    FROM ZNOTE INNER JOIN ZNOTEBODY ON ZNOTE.Z_PK = ZNOTEBODY.ZOWNER
-                    ORDER BY ZNOTE.ZCREATIONDATE'''
-
-            cursor.execute(sql)
-
-            with open(filename, 'w') as outfile:
-                json.dump(cursor.fetchall(), outfile, default=base64.b64encode)
 
             db.close()
         except Exception as e:

@@ -89,25 +89,19 @@ def iosDumpData(selection):
         shutil.copyfile(iosBackup.path() + ios.dbVoicemail, outputFolder + "db/voicemail.sqlite")
 
     print("Dumping SMS Messages")
-    iosBackup.dumpSMS(outputFolder, "sms.json")
-
-    print("Dumping Call History")
-    iosBackup.dumpCallHistory(outputFolder + "callhistory.json")
+    iosBackup.dumpSMS(outputFolder)
 
     print("Dumping Address Book")
     iosBackup.dumpAddressBook(outputFolder)
 
     print("Dumping Voicemail")
-    iosBackup.dumpVoicemail(outputFolder, "voicemail.json")
+    iosBackup.dumpVoicemail(outputFolder)
 
     print("Dumping Voice Memos")
-    iosBackup.dumpMemos(outputFolder, "recordings.json")
+    iosBackup.dumpMemos(outputFolder)
 
     print("Dumping Camera Roll")
-    iosBackup.dumpCameraRoll(outputFolder, "cameraroll.json")
-
-    print("Dumping Notes")
-    iosBackup.dumpNotes(outputFolder + "notes.json")
+    iosBackup.dumpCameraRoll(outputFolder)
 
     print("Dump Complete!")
 
