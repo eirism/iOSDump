@@ -184,9 +184,18 @@ class ios:
 
         return backup
 
+    def filehash_path(self, filehash):
+        """ Return full path for the given filehash """
+        return os.path.join(self.path(), filehash[:2], filehash)
+
+    def file_path(self, filename):
+        """ Return full path for the given filename """
+        filehash = hashlib.sha1(filename.encode()).hexdigest()
+        return self.filehash_path(filehash)
+
     # Dump Restriction Passcode
     def dumpRestrictionPasscode(self, index):
-        plistRestrictions = self.path(index) + self.plistRestrictions
+        plistRestrictions = self.filehash_path(self.plistRestrictions)
         #print "Restriction Passcode: " + plistRestrictions
         if os.path.exists(plistRestrictions):
             try:
@@ -210,7 +219,7 @@ class ios:
         try:
             # Save all SMS Attachments iOS < 6.0
             sql = "SELECT * FROM msg_pieces"
-            db = sqlite3.connect(self.path() + self.dbSMS)
+            db = sqlite3.connect(self.filehash_path(self.dbSMS))
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
@@ -219,7 +228,7 @@ class ios:
                     # Write each attachment out to the sms folder
                     f = "MediaDomain-Library/SMS/Attachments/" + row['content_loc']
                     print(f)
-                    f = self.path() + hashlib.sha1(f).hexdigest()
+                    f = self.file_path(f)
                     print(f)
                     if os.path.exists(f):
                         shutil.copyfile(f, path + "sms/" + row['content_loc'])
@@ -231,7 +240,7 @@ class ios:
         try:
             # Save all SMS Attachments iOS >= 6.0
             sql = "SELECT * FROM attachment"
-            db = sqlite3.connect(self.path() + self.dbSMS)
+            db = sqlite3.connect(self.filehash_path(self.dbSMS))
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
@@ -242,7 +251,7 @@ class ios:
                     f = f.replace("/var/mobile/", "MediaDomain-")
                     f = f.replace("~/", "MediaDomain-")
                     #print f
-                    f = self.path() + hashlib.sha1(f).hexdigest()
+                    f = self.file_path(f)
                     #print f
                     if os.path.exists(f):
                         head, tail = os.path.split(row['filename'])
@@ -258,7 +267,7 @@ class ios:
     def dumpAddressBook(self, path):
         # Dump Address Book Images
         try:
-            dbABI = sqlite3.connect(self.path() + self.dbAddressBookImages)
+            dbABI = sqlite3.connect(self.filehash_path(self.dbAddressBookImages))
             dbABI.row_factory = sqlite3.Row
             cursorABI = dbABI.cursor()
 
@@ -311,14 +320,14 @@ class ios:
                 ORDER BY ZGENERICASSET.ZDATECREATED ASC'''
 
         try:
-            db = sqlite3.connect(self.path() + self.dbPhotos)
+            db = sqlite3.connect(self.filehash_path(self.dbPhotos))
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
             for row in cursor:
                 # Copy each image to the roll folder
                 f = "CameraRollDomain-Media/" + row['directory'] + "/" + row['filename']
-                f = self.path() + hashlib.sha1(f).hexdigest()
+                f = self.file_path(f)
                 if os.path.exists(f):
                     print(f)
                     shutil.copyfile(f, path + "roll/" + row['filename'])
@@ -326,13 +335,13 @@ class ios:
                 # Copy video thumbnails to roll folder
                 if row['kind'] == 1:
                     f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".THM"
-                    f = self.path() + hashlib.sha1(f).hexdigest()
+                    f = self.file_path(f)
                     if os.path.exists(f):
                         print(f)
                         shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
                     else:
                         f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".JPG"
-                        f = self.path() + hashlib.sha1(f).hexdigest()
+                        f = self.file_path(f)
                         if os.path.exists(f):
                             print(f)
                             shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
@@ -356,14 +365,14 @@ class ios:
                 ORDER BY voicemail.date'''
 
         try:
-            db = sqlite3.connect(self.path() + self.dbVoicemail)
+            db = sqlite3.connect(self.filehash_path(self.dbVoicemail))
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
             for row in cursor:
                 # Write each image out to the contacts folder
                 vm = "HomeDomain-Library/Voicemail/" + str(row['id']) + ".amr"
-                vm = self.path() + hashlib.sha1(vm).hexdigest()
+                vm = self.file_path(vm)
                 print(vm)
                 if os.path.exists(vm):
                     shutil.copyfile(vm, path + "vm/" + str(row['id']) + ".amr")
@@ -386,7 +395,7 @@ class ios:
                 ORDER BY ZDATE'''
 
         try:
-            db = sqlite3.connect(self.path() + self.dbRecordings)
+            db = sqlite3.connect(self.filehash_path(self.dbRecordings))
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
@@ -394,7 +403,7 @@ class ios:
                 # Write each image out to the contacts folder
                 vm = row['path']
                 vm = vm.replace("/var/mobile/", "MediaDomain-")
-                vm = self.path() + hashlib.sha1(vm).hexdigest()
+                vm = self.file_path(vm)
                 print(vm)
                 if os.path.exists(vm):
                     shutil.copyfile(vm, path + "rec/" + str(row['id']) + ".m4a")
