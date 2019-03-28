@@ -256,10 +256,10 @@ class ios:
         cursorABI.execute(sql)
         for row in cursorABI:
             # Write each image out to the contacts folder
-            print(path + "contacts/%s.jpg" % row['record_id'])
-            f = open(path + "contacts/" + str(row['record_id']) + ".jpg", "w")
-            f.write(row['data'])
-            f.close()
+            outfile = path + "contacts/%s.jpg" % row['record_id']
+            print(outfile)
+            with open(outfile, "wb") as f:
+                f.write(row['data'])
         dbABI.close()
 
     # Camera Roll - When replacing, you should delete all files in the respected folders first
