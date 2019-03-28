@@ -216,7 +216,7 @@ class ios:
     # Library/SMS/Attachments/[random string associated with an MMS]/[MMS file name].[extension] - An MMS file
     # Library/SMS/Attachments/[random string associated with an MMS]/[MMS file name]-preview-left.jpg - A preview/thumbnail of an MMS file
     def dumpSMS(self, path):
-        try:
+        if int(self.productVersion.split('.')[0]) < 6:
             # Save all SMS Attachments iOS < 6.0
             sql = "SELECT * FROM msg_pieces"
             db = sqlite3.connect(self.filehash_path(self.dbSMS))
@@ -227,17 +227,12 @@ class ios:
                 if row['content_loc'] is not None:
                     # Write each attachment out to the sms folder
                     f = "MediaDomain-Library/SMS/Attachments/" + row['content_loc']
-                    print(f)
                     f = self.file_path(f)
                     print(f)
                     if os.path.exists(f):
                         shutil.copyfile(f, path + "sms/" + row['content_loc'])
-
             db.close()
-        except Exception as e:
-            print(e)
-
-        try:
+        else:
             # Save all SMS Attachments iOS >= 6.0
             sql = "SELECT * FROM attachment"
             db = sqlite3.connect(self.filehash_path(self.dbSMS))
@@ -250,16 +245,13 @@ class ios:
                     f = row['filename']
                     f = f.replace("/var/mobile/", "MediaDomain-")
                     f = f.replace("~/", "MediaDomain-")
-                    #print f
                     f = self.file_path(f)
-                    #print f
+                    print(f)
                     if os.path.exists(f):
                         head, tail = os.path.split(row['filename'])
                         shutil.copyfile(f, path + "sms/" + tail)
 
             db.close()
-        except Exception as e:
-            print(e)
 
     # Contacts
     # HomeDomain
