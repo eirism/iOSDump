@@ -159,19 +159,16 @@ class ios:
         self.index = index
         plistInfo = self.path(index) + "Info.plist"
         if os.path.exists(plistInfo):
-            try:
-                info = readPlist(plistInfo)
-                m = re.match(r"(.*?)\d", info['Product Type'])
-                self.deviceType = m.group(1)
-                self.deviceModel = self.devices[info['Product Type']]
-                self.productType = info['Product Type'].replace(',', '').lower()
-                self.productVersion = info['Product Version']
-                self.serialNumber = info['Serial Number']
-                self.deviceName = info['Device Name']
-                self.lastBackupDate = info['Last Backup Date']
-                self.targetIdentifier = info['Target Identifier']
-            except Exception as e:
-                print(e)
+            info = readPlist(plistInfo)
+            m = re.match(r"(.*?)\d", info['Product Type'])
+            self.deviceType = m.group(1)
+            self.deviceModel = self.devices[info['Product Type']]
+            self.productType = info['Product Type'].replace(',', '').lower()
+            self.productVersion = info['Product Version']
+            self.serialNumber = info['Serial Number']
+            self.deviceName = info['Device Name']
+            self.lastBackupDate = info['Last Backup Date']
+            self.targetIdentifier = info['Target Identifier']
 
         #self.dumpRestrictionPasscode(index)
 
@@ -196,16 +193,10 @@ class ios:
     # Dump Restriction Passcode
     def dumpRestrictionPasscode(self, index):
         plistRestrictions = self.filehash_path(self.plistRestrictions)
-        #print "Restriction Passcode: " + plistRestrictions
         if os.path.exists(plistRestrictions):
-            try:
-                info = readPlist(plistRestrictions)
-                self.restrictionPasscode = info['SBParentalControlsPIN']
-                self.restrictionFailedAttempts = info['SBParentalControlsFailedAttempts']
-                #print "Restriction Passcode: " + info['SBParentalControlsPIN']
-                #print "Restriction Passcode: " + info['SBParentalControlsFailedAttempts']
-            except Exception as e:
-                print(e)
+            info = readPlist(plistRestrictions)
+            self.restrictionPasscode = info['SBParentalControlsPIN']
+            self.restrictionFailedAttempts = info['SBParentalControlsFailedAttempts']
 
     # SMS, MMS, iMessages, and iMessage/FaceTime settings
     # HomeDomain
@@ -250,7 +241,6 @@ class ios:
                     if os.path.exists(f):
                         head, tail = os.path.split(row['filename'])
                         shutil.copyfile(f, path + "sms/" + tail)
-
             db.close()
 
     # Contacts
@@ -258,23 +248,19 @@ class ios:
     # Library/AddressBook/*
     def dumpAddressBook(self, path):
         # Dump Address Book Images
-        try:
-            dbABI = sqlite3.connect(self.filehash_path(self.dbAddressBookImages))
-            dbABI.row_factory = sqlite3.Row
-            cursorABI = dbABI.cursor()
+        dbABI = sqlite3.connect(self.filehash_path(self.dbAddressBookImages))
+        dbABI.row_factory = sqlite3.Row
+        cursorABI = dbABI.cursor()
 
-            sql = "SELECT * FROM ABFullSizeImage" # WHERE record_id = 1"
-            cursorABI.execute(sql)
-            for row in cursorABI:
-                # Write each image out to the contacts folder
-                print(path + "contacts/%s.jpg" % row['record_id'])
-                f = open(path + "contacts/" + str(row['record_id']) + ".jpg", "w")
-                f.write(row['data'])
-                f.close()
-
-            dbABI.close()
-        except Exception as e:
-            print(e)
+        sql = "SELECT * FROM ABFullSizeImage" # WHERE record_id = 1"
+        cursorABI.execute(sql)
+        for row in cursorABI:
+            # Write each image out to the contacts folder
+            print(path + "contacts/%s.jpg" % row['record_id'])
+            f = open(path + "contacts/" + str(row['record_id']) + ".jpg", "w")
+            f.write(row['data'])
+            f.close()
+        dbABI.close()
 
     # Camera Roll - When replacing, you should delete all files in the respected folders first
     # CameraRollDomain
@@ -311,36 +297,32 @@ class ios:
                 WHERE ZGENERICASSET.ZDATECREATED is not NULL
                 ORDER BY ZGENERICASSET.ZDATECREATED ASC'''
 
-        try:
-            db = sqlite3.connect(self.filehash_path(self.dbPhotos))
-            db.row_factory = sqlite3.Row
-            cursor = db.cursor()
-            cursor.execute(sql)
-            for row in cursor:
-                # Copy each image to the roll folder
-                f = "CameraRollDomain-Media/" + row['directory'] + "/" + row['filename']
+        db = sqlite3.connect(self.filehash_path(self.dbPhotos))
+        db.row_factory = sqlite3.Row
+        cursor = db.cursor()
+        cursor.execute(sql)
+        for row in cursor:
+            # Copy each image to the roll folder
+            f = "CameraRollDomain-Media/" + row['directory'] + "/" + row['filename']
+            f = self.file_path(f)
+            if os.path.exists(f):
+                print(f)
+                shutil.copyfile(f, path + "roll/" + row['filename'])
+
+            # Copy video thumbnails to roll folder
+            if row['kind'] == 1:
+                f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".THM"
                 f = self.file_path(f)
                 if os.path.exists(f):
                     print(f)
-                    shutil.copyfile(f, path + "roll/" + row['filename'])
-
-                # Copy video thumbnails to roll folder
-                if row['kind'] == 1:
-                    f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".THM"
+                    shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
+                else:
+                    f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".JPG"
                     f = self.file_path(f)
                     if os.path.exists(f):
                         print(f)
                         shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
-                    else:
-                        f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".JPG"
-                        f = self.file_path(f)
-                        if os.path.exists(f):
-                            print(f)
-                            shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
-
-            db.close()
-        except Exception as e:
-            print(e)
+        db.close()
 
     # Voicemail
     # HomeDomain
@@ -356,22 +338,18 @@ class ios:
                 FROM voicemail
                 ORDER BY voicemail.date'''
 
-        try:
-            db = sqlite3.connect(self.filehash_path(self.dbVoicemail))
-            db.row_factory = sqlite3.Row
-            cursor = db.cursor()
-            cursor.execute(sql)
-            for row in cursor:
-                # Write each image out to the contacts folder
-                vm = "HomeDomain-Library/Voicemail/" + str(row['id']) + ".amr"
-                vm = self.file_path(vm)
-                print(vm)
-                if os.path.exists(vm):
-                    shutil.copyfile(vm, path + "vm/" + str(row['id']) + ".amr")
-
-            db.close()
-        except Exception as e:
-            print(e)
+        db = sqlite3.connect(self.filehash_path(self.dbVoicemail))
+        db.row_factory = sqlite3.Row
+        cursor = db.cursor()
+        cursor.execute(sql)
+        for row in cursor:
+            # Write each image out to the contacts folder
+            vm = "HomeDomain-Library/Voicemail/" + str(row['id']) + ".amr"
+            vm = self.file_path(vm)
+            print(vm)
+            if os.path.exists(vm):
+                shutil.copyfile(vm, path + "vm/" + str(row['id']) + ".amr")
+        db.close()
 
     # Voice Memos
     # MediaDomain
@@ -386,20 +364,16 @@ class ios:
                 FROM ZRECORDING
                 ORDER BY ZDATE'''
 
-        try:
-            db = sqlite3.connect(self.filehash_path(self.dbRecordings))
-            db.row_factory = sqlite3.Row
-            cursor = db.cursor()
-            cursor.execute(sql)
-            for row in cursor:
-                # Write each image out to the contacts folder
-                vm = row['path']
-                vm = vm.replace("/var/mobile/", "MediaDomain-")
-                vm = self.file_path(vm)
-                print(vm)
-                if os.path.exists(vm):
-                    shutil.copyfile(vm, path + "rec/" + str(row['id']) + ".m4a")
-
-            db.close()
-        except Exception as e:
-            print(e)
+        db = sqlite3.connect(self.filehash_path(self.dbRecordings))
+        db.row_factory = sqlite3.Row
+        cursor = db.cursor()
+        cursor.execute(sql)
+        for row in cursor:
+            # Write each image out to the contacts folder
+            vm = row['path']
+            vm = vm.replace("/var/mobile/", "MediaDomain-")
+            vm = self.file_path(vm)
+            print(vm)
+            if os.path.exists(vm):
+                shutil.copyfile(vm, path + "rec/" + str(row['id']) + ".m4a")
+        db.close()
