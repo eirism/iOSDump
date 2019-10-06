@@ -1,24 +1,33 @@
 # Fork of idolpx/iOSDump
 Dump contents of an iOS device iTunes backup
 
-Ported to Python 3 and removed the Kivy UI
+# Differences from upstream
+* Ported to Python 3
+* Removed the Kivy UI
+* Removed JSON database dumps
 
+
+# How to use
 To run the program use this command.
 ```
 $ python iosdump.py
 ```
 
 ## Currently extracts the following
-* Call History
-* Calendar
+* Call History*
+* Calendar*
 * Camera Roll Images & Video files
-* Contacts
-* Notes
-* SMS & iMessage Messages (Including Attachments)
+* Contacts*
+* Contacts images
+* Notes*
+* SMS & iMessage messages*
+* SMS & iMessage attachments
 * Voice Memos
 * Voicemail Messages
 
-## To-Do
+\* Only the SQLite database file is extracted
+
+## Ideas for improvements
 * Recover Restriction Passcode
 * Extract Browser History & Bookmarks
 * Support encrypted & icloud backups
