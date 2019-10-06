@@ -28,6 +28,11 @@ from biplist import readPlist
 # Setup Global Vars
 default_backup_path = expanduser("~") + "/Library/Application Support/MobileSync/Backup/"
 
+
+def hash_ios(value):
+    return hashlib.sha1(value.encode()).hexdigest()
+
+
 # iOS Specific Filenames and hashes
 
 # 51a4616e576dd33cd2abadfea874eb8ff246bf0e
@@ -35,26 +40,41 @@ plistKeyChain = 'KeychainDomain-keychain-backup.plist'
 plistHistory = 'HomeDomain-Library/Safari/History.plist'
 plistRestrictions = 'HomeDomain-Library/Preferences/com.apple.springboard.plist'
 
-# 3d0d7e5fb2ce288813306e4d4636395e047a3d28
-dbSMS = 'HomeDomain-Library/SMS/sms.db'
-# 31bb7ba8914766d4ba40d6dfb6113c8b614be442
-dbAddressBook = 'HomeDomain-Library/AddressBook/AddressBook.sqlitedb'
-# cd6702cea29fe89cf280a76794405adb17f9a0ee
-dbAddressBookImages = 'HomeDomain-Library/AddressBook/AddressBookImages.sqlitedb'
-# 2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca
-dbCallHistory = 'WirelessDomain-Library/CallHistory/call_history.db'
-# ca3bc056d4da0bbf88b5fb3be254f3b7147e639c
-dbNotes = 'HomeDomain-Library/Notes/notes.sqlite'
-# 2041457d5fe04d39d0ab481178355df6781e6858
-dbCalendar = 'HomeDomain-Library/Calendar/Calendar.sqlitedb'
-# 992df473bbb9e132f4b3b6e4d33f72171e97bc7a
-dbVoicemail = 'HomeDomain-Library/Voicemail/voicemail.db'
-# 12b144c0bd44f2b3dffd9186d3f9c05b917cee25
-dbPhotos = 'CameraRollDomain-Media/PhotoData/Photos.sqlite'
-# 303e04f2a5b473c5ca2127d65365db4c3e055c05
-dbRecordings = 'MediaDomain-Media/Recordings/Recordings.db'
-dbBookmarks = 'HomeDomain-Library/Safari/Bookmarks.db'
-dbLocations = ''
+database_list = [
+    # 3d0d7e5fb2ce288813306e4d4636395e047a3d28
+    ['sms', 'HomeDomain-Library/SMS/', 'sms.db'],
+    # 31bb7ba8914766d4ba40d6dfb6113c8b614be442
+    ['address_book', 'HomeDomain-Library/AddressBook/', 'AddressBook.sqlitedb'],
+    # cd6702cea29fe89cf280a76794405adb17f9a0ee
+    ['address_book_images', 'HomeDomain-Library/AddressBook/', 'AddressBookImages.sqlitedb'],
+    # 2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca
+    ['call_history', 'WirelessDomain-Library/CallHistory/', 'call_history.db'],
+    # ca3bc056d4da0bbf88b5fb3be254f3b7147e639c
+    ['notes', 'HomeDomain-Library/Notes/', 'notes.sqlite'],
+    # 2041457d5fe04d39d0ab481178355df6781e6858
+    ['calendar', 'HomeDomain-Library/Calendar/', 'Calendar.sqlitedb'],
+    # 992df473bbb9e132f4b3b6e4d33f72171e97bc7a
+    ['voicemail', 'HomeDomain-Library/Voicemail/', 'voicemail.db'],
+    # 12b144c0bd44f2b3dffd9186d3f9c05b917cee25
+    ['cameraroll', 'CameraRollDomain-Media/PhotoData/', 'Photos.sqlite'],
+    # 303e04f2a5b473c5ca2127d65365db4c3e055c05
+    ['recordings', 'MediaDomain-Media/Recordings/', 'Recordings.db'],
+    ['bookmarks', 'HomeDomain-Library/Safari/', 'Bookmarks.db'],
+    ['locations', '', ''],
+]
+
+databases = {}
+for database_info in database_list:
+    name = database_info[0]
+    path = database_info[1]
+    filename = database_info[2]
+    full_path = path + filename
+    filehash = hash_ios(full_path)
+
+    databases[name] = {'path': path,
+                       'filename': filename,
+                       'full_path': full_path,
+                       'filehash': filehash}
 
 
 class ios:
@@ -135,19 +155,9 @@ class ios:
     targetIdentifier = ''
 
     # Hash iOS Filenames
-    plistKeyChain = hashlib.sha1(plistKeyChain.encode()).hexdigest()
-    plistHistory = hashlib.sha1(plistHistory.encode()).hexdigest()
-    plistRestrictions = hashlib.sha1(plistRestrictions.encode()).hexdigest()
-
-    dbSMS = hashlib.sha1(dbSMS.encode()).hexdigest()
-    dbAddressBook = hashlib.sha1(dbAddressBook.encode()).hexdigest()
-    dbAddressBookImages = hashlib.sha1(dbAddressBookImages.encode()).hexdigest()
-    dbCallHistory = hashlib.sha1(dbCallHistory.encode()).hexdigest()
-    dbNotes = hashlib.sha1(dbNotes.encode()).hexdigest()
-    dbCalendar = hashlib.sha1(dbCalendar.encode()).hexdigest()
-    dbVoicemail = hashlib.sha1(dbVoicemail.encode()).hexdigest()
-    dbPhotos = hashlib.sha1(dbPhotos.encode()).hexdigest()
-    dbRecordings = hashlib.sha1(dbRecordings.encode()).hexdigest()
+    plistKeyChain = hash_ios(plistKeyChain)
+    plistHistory = hash_ios(plistHistory)
+    plistRestrictions = hash_ios(plistRestrictions)
 
     def __init__(self, path=default_backup_path):
         """ The given path should only contain iOS backups """
@@ -187,7 +197,7 @@ class ios:
 
     def file_path(self, filename):
         """ Return full path for the given filename """
-        filehash = hashlib.sha1(filename.encode()).hexdigest()
+        filehash = hash_ios(filename)
         return self.filehash_path(filehash)
 
     # Dump Restriction Passcode
@@ -197,6 +207,19 @@ class ios:
             info = readPlist(plistRestrictions)
             self.restrictionPasscode = info['SBParentalControlsPIN']
             self.restrictionFailedAttempts = info['SBParentalControlsFailedAttempts']
+
+    def dumpDBs(self, path, *dbs):
+        for db in dbs:
+            if db not in databases:
+                print("{} is not a valid database name. Valid names are {}.".format(db, ", ".join(databases.keys())))
+            else:
+                database_info = databases[db]
+                db_path = self.filehash_path(database_info['filehash'])
+                filename = database_info['filename']
+                if os.path.exists(db_path):
+                    shutil.copyfile(db_path, os.path.join(path, 'db', filename))
+                else:
+                    print("The database file for {} does not exist in the backup.".format(db))
 
     # SMS, MMS, iMessages, and iMessage/FaceTime settings
     # HomeDomain
@@ -210,7 +233,8 @@ class ios:
         if int(self.productVersion.split('.')[0]) < 6:
             # Save all SMS Attachments iOS < 6.0
             sql = "SELECT * FROM msg_pieces"
-            db = sqlite3.connect(self.filehash_path(self.dbSMS))
+            db_path = self.filehash_path(databases['sms']['filehash'])
+            db = sqlite3.connect(db_path)
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
@@ -226,7 +250,8 @@ class ios:
         else:
             # Save all SMS Attachments iOS >= 6.0
             sql = "SELECT * FROM attachment"
-            db = sqlite3.connect(self.filehash_path(self.dbSMS))
+            db_path = self.filehash_path(databases['sms']['filehash'])
+            db = sqlite3.connect(db_path)
             db.row_factory = sqlite3.Row
             cursor = db.cursor()
             cursor.execute(sql)
@@ -248,19 +273,20 @@ class ios:
     # Library/AddressBook/*
     def dumpAddressBook(self, path):
         # Dump Address Book Images
-        dbABI = sqlite3.connect(self.filehash_path(self.dbAddressBookImages))
-        dbABI.row_factory = sqlite3.Row
-        cursorABI = dbABI.cursor()
+        db_path = self.filehash_path(databases['address_book_images']['filehash'])
+        db = sqlite3.connect(db_path)
+        db.row_factory = sqlite3.Row
+        cursor = db.cursor()
 
-        sql = "SELECT * FROM ABFullSizeImage" # WHERE record_id = 1"
-        cursorABI.execute(sql)
-        for row in cursorABI:
+        sql = "SELECT * FROM ABFullSizeImage"
+        cursor.execute(sql)
+        for row in cursor:
             # Write each image out to the contacts folder
             outfile = path + "contacts/%s.jpg" % row['record_id']
             print(outfile)
             with open(outfile, "wb") as f:
                 f.write(row['data'])
-        dbABI.close()
+        db.close()
 
     # Camera Roll - When replacing, you should delete all files in the respected folders first
     # CameraRollDomain
@@ -297,7 +323,8 @@ class ios:
                 WHERE ZGENERICASSET.ZDATECREATED is not NULL
                 ORDER BY ZGENERICASSET.ZDATECREATED ASC'''
 
-        db = sqlite3.connect(self.filehash_path(self.dbPhotos))
+        db_path = self.filehash_path(databases['cameraroll']['filehash'])
+        db = sqlite3.connect(db_path)
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute(sql)
@@ -338,7 +365,8 @@ class ios:
                 FROM voicemail
                 ORDER BY voicemail.date'''
 
-        db = sqlite3.connect(self.filehash_path(self.dbVoicemail))
+        db_path = self.filehash_path(databases['voicemail']['filehash'])
+        db = sqlite3.connect(db_path)
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute(sql)
@@ -364,7 +392,8 @@ class ios:
                 FROM ZRECORDING
                 ORDER BY ZDATE'''
 
-        db = sqlite3.connect(self.filehash_path(self.dbRecordings))
+        db_path = self.filehash_path(databases['recordings']['filehash'])
+        db = sqlite3.connect(db_path)
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute(sql)

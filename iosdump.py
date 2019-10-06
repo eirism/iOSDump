@@ -69,24 +69,16 @@ def iosDumpData(selection):
     print(iosBackup.path())
 
     # Copy Database Files to Output Folder
-    if os.path.exists(iosBackup.path() + ios.dbAddressBook):
-        shutil.copyfile(iosBackup.path() + ios.dbAddressBook, outputFolder + "db/AddressBook.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbAddressBookImages):
-        shutil.copyfile(iosBackup.path() + ios.dbAddressBookImages, outputFolder + "db/AddressBookImages.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbCalendar):
-        shutil.copyfile(iosBackup.path() + ios.dbCalendar, outputFolder + "db/Calendar.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbCallHistory):
-        shutil.copyfile(iosBackup.path() + ios.dbCallHistory, outputFolder + "db/call_history.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbNotes):
-        shutil.copyfile(iosBackup.path() + ios.dbNotes, outputFolder + "db/notes.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbPhotos):
-        shutil.copyfile(iosBackup.path() + ios.dbPhotos, outputFolder + "db/Photos.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbRecordings):
-        shutil.copyfile(iosBackup.path() + ios.dbRecordings, outputFolder + "db/Recordings.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbSMS):
-        shutil.copyfile(iosBackup.path() + ios.dbSMS, outputFolder + "db/sms.sqlite")
-    if os.path.exists(iosBackup.path() + ios.dbVoicemail):
-        shutil.copyfile(iosBackup.path() + ios.dbVoicemail, outputFolder + "db/voicemail.sqlite")
+    iosBackup.dumpDBs(outputFolder,
+                      'address_book',
+                      'address_book_images',
+                      'calendar',
+                      'call_history',
+                      'notes',
+                      'cameraroll',
+                      'recordings',
+                      'sms',
+                      'voicemail')
 
     print("Dumping SMS Messages")
     iosBackup.dumpSMS(outputFolder)
