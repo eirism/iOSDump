@@ -19,6 +19,7 @@ import shutil
 import os
 import os.path
 from os.path import expanduser
+from pathlib import Path
 
 import re
 import hashlib
@@ -328,27 +329,26 @@ class ios:
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute(sql)
+        cameraroll_base = "CameraRollDomain-Media"
         for row in cursor:
+            base_dst_path = os.path.join(path, "roll", row['directory'])
+            Path(base_dst_path).mkdir(parents=True, exist_ok=True)
             # Copy each image to the roll folder
-            f = "CameraRollDomain-Media/" + row['directory'] + "/" + row['filename']
-            f = self.file_path(f)
+            normal_path = "/".join([cameraroll_base, row['directory'], row['filename']])
+            f = self.file_path(normal_path)
             if os.path.exists(f):
                 print(f)
-                shutil.copyfile(f, path + "roll/" + row['filename'])
+                shutil.copyfile(f, os.path.join(base_dst_path, row['filename']))
 
             # Copy video thumbnails to roll folder
             if row['kind'] == 1:
-                f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".THM"
-                f = self.file_path(f)
-                if os.path.exists(f):
-                    print(f)
-                    shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
-                else:
-                    f = "CameraRollDomain-Media/PhotoData/Metadata/" + row['directory'] + "/" + row['title'] + ".JPG"
-                    f = self.file_path(f)
+                thumbnail_name = os.path.splitext(row['filename'])[0]
+                base_file = "{}/PhotoData/Metadata/{}/{}".format(cameraroll_base, row['directory'], thumbnail_name)
+                for extension in ['.THM', '.JPG']:
+                    f = self.file_path(base_file + extension)
                     if os.path.exists(f):
                         print(f)
-                        shutil.copyfile(f, path + "roll/" + row['title'] + ".JPG")
+                        shutil.copyfile(f, os.path.join(base_dst_path, row['filename'] + extension))
         db.close()
 
     # Voicemail
