@@ -371,7 +371,7 @@ class ios:
         cursor = db.cursor()
         cursor.execute(sql)
         for row in cursor:
-            # Write each image out to the contacts folder
+            # Copy each voicemail
             vm = "HomeDomain-Library/Voicemail/" + str(row['id']) + ".amr"
             vm = self.file_path(vm)
             print(vm)
@@ -398,7 +398,7 @@ class ios:
         cursor = db.cursor()
         cursor.execute(sql)
         for row in cursor:
-            # Write each image out to the contacts folder
+            # Copy each recording
             vm = row['path']
             vm = vm.replace("/var/mobile/", "MediaDomain-")
             vm = self.file_path(vm)
