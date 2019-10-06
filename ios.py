@@ -307,7 +307,7 @@ class ios:
                     ZGENERICASSET.ZWIDTH AS width,
                     ZGENERICASSET.ZHEIGHT AS height,
                     ZGENERICASSET.ZORIENTATION AS orientation,
-                    ZADDITIONALASSETATTRIBUTES.ZDURATION as duration,
+                    ZGENERICASSET.ZDURATION as duration,
                     ZADDITIONALASSETATTRIBUTES.ZORIGINALFILESIZE as filesize,
                     ZGENERICASSET.ZDIRECTORY AS directory,
                     ZGENERICASSET.ZFILENAME AS filename,
