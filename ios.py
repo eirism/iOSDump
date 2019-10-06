@@ -47,8 +47,8 @@ database_list = [
     ['address_book', 'HomeDomain-Library/AddressBook/', 'AddressBook.sqlitedb'],
     # cd6702cea29fe89cf280a76794405adb17f9a0ee
     ['address_book_images', 'HomeDomain-Library/AddressBook/', 'AddressBookImages.sqlitedb'],
-    # 2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca
-    ['call_history', 'WirelessDomain-Library/CallHistory/', 'call_history.db'],
+    # 5a4935c78a5255723f707230a451d79c540d2741
+    ['call_history', 'HomeDomain-Library/CallHistoryDB/', 'CallHistory.storedata'],
     # ca3bc056d4da0bbf88b5fb3be254f3b7147e639c
     ['notes', 'HomeDomain-Library/Notes/', 'notes.sqlite'],
     # 2041457d5fe04d39d0ab481178355df6781e6858
